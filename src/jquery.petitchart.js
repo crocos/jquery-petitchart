@@ -36,8 +36,9 @@
       }
     , draw = function($svg, options) {
         var len = options.data.length
-          , yper = options.height / 100
-          , xwid = ((100 - (options.span * (len - 1))) / (len * 100)) * options.width;
+          , type = options.type || 'bar';
+        options.yper = options.height / 100;
+        options.xwid = (options.width - (options.span * (len - 1))) / len;
 
         $svg.attr({
           viewBox: [0, 0, options.width, options.height].join(' '),
@@ -45,32 +46,61 @@
           height: options.height
         });
 
-        $.each(options.data, function(i, val) {
+        switch (type) {
+          case 'line':
+            drawLineChart($svg, options.data, options);
+            break;
+          case 'bar':
+          default:
+            drawBarChart($svg, options.data, options);
+            break;
+        }
+      }
+    , drawBarChart = function($svg, data, options) {
+        $.each(data, function(i, val) {
           var $rect = $create('rect')
-            , height = val.per * yper
-            , x = (xwid * i) + (options.span * i)
+            , height = val.per * options.yper
+            , x = (options.xwid * i) + (options.span * i)
             , y = options.height - height;
 
           $rect.attr({
             x: x,
             y: y,
-            width: xwid,
+            width: options.xwid,
             height: height,
             fill: options.color,
             'stroke-width': 1,
             stroke: options.color
           });
-
           $svg.append($rect);
         });
-      };
+      }
+    , drawLineChart = function($svg, data, options) {
+        var $line = $create('polyline')
+          , attr = {}
+          , points = []
+          ;
+
+        $.each(data, function(i, val) {
+          var y = options.height - (val.per * options.yper)
+            , x = ((options.xwid + options.span) * i) + ((options.xwid) / 2)
+            ;
+          points.push(x + " " + y);
+        });
+        $line.attr({
+          points: points.join(','),
+          fill: "none",
+          'stroke-width': (options.width > 200) ? 2 : 1,
+          stroke: options.color
+        });
+        $svg.append($line);
+      }
+      ;
 
   $.fn.petitchart = function(options) {
     var options = parseData($.extend({}, $.fn.petitchart.defaults, options))
       , $self = $(this)
-      , $svg = $create('svg')
-      , chartBase = 0
-      , chartTop = options.height;
+      , $svg = $create('svg');
 
     draw($svg, options);
 
@@ -96,7 +126,7 @@
 
       args.data = $self.attr(NS);
 
-      $.each(['color', 'width', 'height'], function() {
+      $.each(['color', 'width', 'height', 'type'], function() {
         var val = $self.attr([NS, this].join('-'));
 
         if (val) {
