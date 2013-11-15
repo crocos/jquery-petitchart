@@ -5,7 +5,6 @@
  * @author Keisuke SATO <sato@crocos.co.jp>
  * @license BSD License
  */
-
 ;(function($){
 
   'use strict';
@@ -36,7 +35,8 @@
       }
     , draw = function($svg, options) {
         var len = options.data.length
-          , type = options.type || 'bar';
+          , type = options.type;
+
         options.yper = options.height / 100;
         options.xwid = (options.width - (options.span * (len - 1))) / len;
 
@@ -46,18 +46,18 @@
           height: options.height
         });
 
-        switch (type) {
+        switch (type.toLowerCase()) {
           case 'line':
-            drawLineChart($svg, options.data, options);
+            drawLineChart($svg, options);
             break;
           case 'bar':
           default:
-            drawBarChart($svg, options.data, options);
+            drawBarChart($svg, options);
             break;
         }
       }
-    , drawBarChart = function($svg, data, options) {
-        $.each(data, function(i, val) {
+    , drawBarChart = function($svg, options) {
+        $.each(options.data, function(i, val) {
           var $rect = $create('rect')
             , height = val.per * options.yper
             , x = (options.xwid * i) + (options.span * i)
@@ -75,18 +75,18 @@
           $svg.append($rect);
         });
       }
-    , drawLineChart = function($svg, data, options) {
+    , drawLineChart = function($svg, options) {
         var $line = $create('polyline')
           , attr = {}
-          , points = []
-          ;
+          , points = [];
 
-        $.each(data, function(i, val) {
+        $.each(options.data, function(i, val) {
           var y = options.height - (val.per * options.yper)
-            , x = ((options.xwid + options.span) * i) + ((options.xwid) / 2)
-            ;
+            , x = ((options.xwid + options.span) * i) + ((options.xwid) / 2);
+
           points.push(x + " " + y);
         });
+
         $line.attr({
           points: points.join(','),
           fill: "none",
@@ -94,8 +94,7 @@
           stroke: options.color
         });
         $svg.append($line);
-      }
-      ;
+      };
 
   $.fn.petitchart = function(options) {
     var options = parseData($.extend({}, $.fn.petitchart.defaults, options))
@@ -113,8 +112,8 @@
     color: 'red',
     width: 100,
     height: 20,
-    span: 5,
-    base: 0
+    span: 2,
+    type: 'bar'
   };
 
   // auto-execution
@@ -126,11 +125,12 @@
 
       args.data = $self.attr(NS);
 
-      $.each(['color', 'width', 'height', 'type'], function() {
-        var val = $self.attr([NS, this].join('-'));
+      $.each(['color', 'width', 'height', 'span', 'type'], function() {
+        var key = this
+          , val = $self.attr([NS, key].join('-'));
 
         if (val) {
-          args[this] = val;
+          args[key] = val;
         }
       });
 

@@ -1,6 +1,10 @@
 {
   "name": "jquery-petitchart",
   "license": "BSD",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/crocos/jquery-petitchart.git"
+  },
   "devDependencies": {
     "grunt": ">=0.4.0",
     "grunt-contrib-clean": ">=0.4.0",
